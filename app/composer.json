@@ -1,5 +1,15 @@
 {
     "require": {
-        "mongodb/mongodb": "^1.0.0"
-    }
+        "slim/http": "^1.2",
+        "slim/psr7": "^1.4",
+        "slim/slim": "^4.8",
+        "mongodb/mongodb": "^1.0.0",
+        "predis/predis": "^1.1"
+    },
+    "autoload": {
+        "psr-0": {
+            "queue": "src/",
+            "persistence": "src/"
+        }
+      }
 }

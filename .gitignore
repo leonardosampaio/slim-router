@@ -2,3 +2,4 @@
 .history
 vendor
 *.log
+configuration.json
