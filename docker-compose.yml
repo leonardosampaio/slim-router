@@ -5,14 +5,13 @@ services:
     image: mongo:latest
     volumes: 
       - dbdata:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: user
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: default
     ports:
       - "27017:27017"
-    volumes:
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - app-network
 
@@ -34,7 +33,7 @@ services:
     container_name: webserver
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "81:80"
     volumes:
       - ./app:/var/www/html
       - ./nginx-conf:/etc/nginx/conf.d
