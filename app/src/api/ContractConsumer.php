@@ -20,7 +20,7 @@ class ContractConsumer
     }
 
     /**
-     * Send a message to the Contract server on $this->stateChangeUrl
+     * Send a message to the Contract server on $this->url
      * 
      * @param string $message raw json to be sent
      * 

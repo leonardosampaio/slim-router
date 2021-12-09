@@ -1,0 +1,38 @@
+{
+    "workerDelayInMilliseconds":1000,
+    "messageLimit":60,
+    "timeLimitInSeconds":60,
+    "unsentState":0,
+    "sentState":1,
+
+    "db":{
+        "user":"user",
+        "password":"password",
+        "host":"db",
+        "database":"database",
+        "port":27017,
+        "messagesCollection":"messages",
+        "contractResponsesCollection":"contract_responses"
+    },
+
+    "redis": {
+        "scheme":"tcp",
+        "host":"redis",
+        "port":6379,
+        "messagesKey":"messages",
+        "countKey":"count"
+    },
+
+    "apiServer":{
+        "port":443,
+        "timeoutInSeconds":10,
+        "stateChangeUrl":"https://reqbin.com/echo/post/json"
+    },
+    
+    "contractServer":
+    {
+        "port":443,
+        "timeoutInSeconds":10,
+        "url":"https://reqbin.com/echo/post/json"
+    }
+}
