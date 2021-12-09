@@ -13,8 +13,16 @@ class MongoDao
     public function __construct($config)
     {
         $this->connection = new Client(
-            "mongodb://$config->db->user:$config->db->password@$config->db->host:$config->db->port");
-        $this->db = $this->connection->{$config->database};
+            "mongodb://".
+            $config->db->user.
+            ":".
+            $config->db->password.
+            "@".
+            $config->db->host.
+            ":".
+            $config->db->port
+        );
+        $this->db = $this->connection->{$config->db->database};
 
         $this->unsentState = $config->unsentState;
         $this->sentState = $config->sentState;
@@ -37,6 +45,7 @@ class MongoDao
         //5. Index the database to quickly query the earliest items that were added to the database based on the items "State" 
         $messagesCollection->createIndex(['State' => 1]);
         $messagesCollection->createIndex(['updatedAt' => 1]);
+
         return $messagesCollection->insertOne($messageArray);
     }
 

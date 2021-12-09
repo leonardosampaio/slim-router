@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 use Slim\Factory\AppFactory;
 use persistence\MongoDao;
@@ -11,8 +11,15 @@ $app = AppFactory::create();
 //show errors
 $app->addErrorMiddleware(true, true, true);
 
-// 1. Communicate bi-directionally with the API server.
-//Receiving POST requests from the API server
+/**
+ * Main entrypoint, will receive POST requests from the API server.
+ * 
+ * Sample request:
+ * 
+ * curl --request POST --data '{"message":"content"}' --header 'Content-Type: application/json' http://localhost:81/receive
+ * 
+ * "1. Communicate bi-directionally with the API server."
+ */
 $app->post('/receive', function($request, $response)
 {
     $rawPayload = file_get_contents('php://input');
@@ -23,7 +30,7 @@ $app->post('/receive', function($request, $response)
     }
 
     $config =
-        json_decode(file_get_contents(__DIR__ . '/../configuration.json'));
+        json_decode(file_get_contents(__DIR__ . '/configuration.json'));
 
     // 2. Format and store every message received from the API server to the database 
     $document = (new MongoDao($config))->saveMessage($objPayload);
