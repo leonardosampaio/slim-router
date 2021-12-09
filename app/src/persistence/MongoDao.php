@@ -36,6 +36,7 @@ class MongoDao
         $this->timeLimit = $config->timeLimit;
 
         $this->messagesCollection = $config->db->messagesCollection;
+        $this->contractResponsesCollection = $config->db->contractResponsesCollection;
     }
 
     /**
