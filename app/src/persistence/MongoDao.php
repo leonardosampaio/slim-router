@@ -33,20 +33,33 @@ class MongoDao
         $this->collection = $config->db->collection;
     }
 
-    public function saveMessage($messageArray)
+    public function saveMessage(&$messageArray)
     {
-        $time = time();
+        try
+        {
+            $time = time();
+    
+            // 3. Store each item with an integer field "State" 
+            $messageArray->State = $this->unsentState;
+            $messageArray->updatedAt = new \MongoDB\BSON\UTCDateTime($time);
+    
+            $messagesCollection = $this->db->messages;
+            //5. Index the database to quickly query the earliest items that were added to the database based on the items "State" 
+            $messagesCollection->createIndex(['State' => 1]);
+            $messagesCollection->createIndex(['updatedAt' => 1]);
+    
+            $result = $messagesCollection->insertOne($messageArray);
 
-        // 3. Store each item with an integer field "State" 
-        $messageArray->State = $this->unsentState;
-        $messageArray->updatedAt = new \MongoDB\BSON\UTCDateTime($time);
+            $id = $result->getInsertedId();
 
-        $messagesCollection = $this->db->messages;
-        //5. Index the database to quickly query the earliest items that were added to the database based on the items "State" 
-        $messagesCollection->createIndex(['State' => 1]);
-        $messagesCollection->createIndex(['updatedAt' => 1]);
-
-        return $messagesCollection->insertOne($messageArray);
+            $messageArray->mongoDbId = $id;
+            
+            return $id;
+        }
+        catch (\Exception $e)
+        {
+            return false;
+        }
     }
 
     public function setMessageSent($document, $contractApiResponse)

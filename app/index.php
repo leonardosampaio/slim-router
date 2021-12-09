@@ -24,7 +24,7 @@ $app->post('/receive', function($request, $response)
 {
     $rawPayload = file_get_contents('php://input');
 
-    if (empty($rawPayload) || empty($objPayload = json_decode($rawPayload)))
+    if (empty($rawPayload) || empty($payloadJsonArray = json_decode($rawPayload)))
     {
         return $response->withJson(['error'=>'Invalid payload'])->withStatus(400);
     }
@@ -33,13 +33,13 @@ $app->post('/receive', function($request, $response)
         json_decode(file_get_contents(__DIR__ . '/configuration.json'));
 
     // 2. Format and store every message received from the API server to the database 
-    $document = (new MongoDao($config))->saveMessage($objPayload);
+    $insertedId = (new MongoDao($config))->saveMessage($payloadJsonArray);
 
-    if ($document->getInsertedId() != null)
+    if ($insertedId)
     {
-        if ((new RedisConsumer($config))->saveMessage($document))
+        if ((new RedisConsumer($config))->saveMessage($payloadJsonArray))
         {
-            return $response->withJson(['messageSaved' => $document], 200);
+            return $response->withJson(['messageSaved' => $payloadJsonArray], 200);
         }
         
         return $response->withJson(['error' => 'Error saving message to queue'], 400);

@@ -36,9 +36,22 @@ class RedisConsumer {
         return $this->client->flushAll();
     }
 
-    public function saveMessage($document)
+    public function saveMessage(&$document)
     {
-        return $this->client->rpush($this->messagesKey, json_encode($document));
+        try {
+            $result = $this->client->rpush($this->messagesKey, json_encode($document));
+    
+            if (is_int($result) && $result > 0)
+            {
+                $document->redisQueuePosition = $result;
+                return $result;
+            }
+
+            return false;
+        }
+        catch (\Exception $e){
+            return false;
+        }
     }
 
     public function getNextMessage()
