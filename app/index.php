@@ -19,7 +19,7 @@ $app->post('/receive', function($request, $response)
 
     if (empty($rawPayload) || empty($objPayload = json_decode($rawPayload)))
     {
-        return $response->whithJson(['error'=>'Invalid payload'])->withStatus(400);
+        return $response->withJson(['error'=>'Invalid payload'])->withStatus(400);
     }
 
     $config =
@@ -40,6 +40,11 @@ $app->post('/receive', function($request, $response)
     }
 
     return $response->withJson(['error' => 'Error saving message to database'], 400);
+});
+
+$app->get('/', function($request, $response)
+{
+    return $response->withJson(['error'=>'Invalid method'])->withStatus(400);
 });
 
 $app->run();
