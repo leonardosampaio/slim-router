@@ -20,6 +20,13 @@ class ApiServerConsumer
                 $config->apiServer->timeoutInSeconds : 10;
     }
 
+    /**
+     * Send a message to the API server on $this->stateChangeUrl
+     * 
+     * @param string $message raw json to be sent
+     * 
+     * @return array httpcode and raw json response from the API server
+     */
     public function sendSateChangeMessage($message)
     {
         return (new CurlWrapper())->post(

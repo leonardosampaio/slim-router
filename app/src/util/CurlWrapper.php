@@ -4,6 +4,16 @@ namespace util;
 
 class CurlWrapper {
 
+    /**
+     * Makes a POST request using libcurl
+     * 
+     * @param string $url The URL to make the request to
+     * @param string $message raw data to send
+     * @param string $timeoutInSeconds connect and receive timeout
+     * @param int $port The port to connect to
+     * 
+     * @return array httpcode and raw json response from server
+     */
     public function post($url, $message, $timeoutInSeconds = 10, $port = 443)
     {
         $curlSession = curl_init();
