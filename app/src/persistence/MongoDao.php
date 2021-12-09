@@ -10,6 +10,9 @@ class MongoDao
     private $unsentState;
     private $sentState;
 
+    private $messagesCollection;
+    private $contractResponsesCollection;
+
     public function __construct($config)
     {
         $this->connection = new Client(
@@ -30,7 +33,7 @@ class MongoDao
         $this->messageLimit = $config->messageLimit;
         $this->timeLimit = $config->timeLimit;
 
-        $this->collection = $config->db->collection;
+        $this->messagesCollection = $config->db->messagesCollection;
     }
 
     public function saveMessage(&$messageArray)
@@ -43,23 +46,25 @@ class MongoDao
             $messageArray->State = $this->unsentState;
             $messageArray->updatedAt = new \MongoDB\BSON\UTCDateTime($time);
     
-            $messagesCollection = $this->db->messages;
+            $collection = $this->db->{$this->messagesCollection};
             //5. Index the database to quickly query the earliest items that were added to the database based on the items "State" 
-            $messagesCollection->createIndex(['State' => 1]);
-            $messagesCollection->createIndex(['updatedAt' => 1]);
+            $collection->createIndex(['State' => 1]);
+            $collection->createIndex(['updatedAt' => 1]);
     
-            $result = $messagesCollection->insertOne($messageArray);
+            $inserted = $collection->insertOne($messageArray);
 
-            $id = $result->getInsertedId();
+            if ($inserted->getInsertedCount() === 1)
+            {
+                $id = $inserted->getInsertedId();
+    
+                $messageArray->mongoDbId = $id;
+                
+                return $id;
+            }
+        }
+        catch (\Exception $e){}
 
-            $messageArray->mongoDbId = $id;
-            
-            return $id;
-        }
-        catch (\Exception $e)
-        {
-            return false;
-        }
+        return false;
     }
 
     public function setMessageSent($document, $contractApiResponse)
@@ -67,19 +72,22 @@ class MongoDao
         $session = $this->connection->startSession();
         $session->startTransaction();
         try {
-            
-            $updated = $this->db->messages->updateOne(
-                ['_id' => $document->getInsertedId()],
+
+            $updated = $this->db->{$this->messagesCollection}->updateOne(
+                ['_id' => new \MongoDB\BSON\ObjectID(
+                    json_decode($document)->mongoDbId->{'$oid'})],
                 ['$set' => ['State' => $this->sentState]]
             );
 
-            $inserted = $this->db->contract_responses->insertOne(
+            $inserted = $this->db->{$this->contractResponsesCollection}->insertOne(
                 json_decode($contractApiResponse)
             );
 
-            return $updated && $inserted;
-
             $session->commitTransaction();
+
+            return $updated->getModifiedCount() === 1 &&
+                $inserted->getInsertedCount() === 1;
+
         } catch(\Exception $e) {
             $session->abortTransaction();
         }

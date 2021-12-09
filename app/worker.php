@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * CLI worker that will process the Redis message queue and update the MongoDB database.
+ */
+
 use queue\RedisConsumer;
 use api\ContractConsumer;
 use api\ApiServerConsumer;
@@ -12,12 +16,13 @@ if( !defined('STDIN') || !(empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HT
     die("This should run in CLI");
 }
 
-$config = json_decode(file_get_contents(__DIR__ . '/configuration.json'));
+$config                 = json_decode(
+                            file_get_contents(__DIR__ . '/configuration.json'));
 
-$redisConsumer = new RedisConsumer($config);
-$contractApiConsumer = new ContractConsumer($config);
-$apiServerConsumer = new ApiServerConsumer($config);
-$dao = new MongoDao($config);
+$redisConsumer          = new RedisConsumer($config);
+$contractApiConsumer    = new ContractConsumer($config);
+$apiServerConsumer      = new ApiServerConsumer($config);
+$dao                    = new MongoDao($config);
 
 while (true)
 {
@@ -25,22 +30,23 @@ while (true)
     {
         // 4. Communicate bi-directionally with the contract server. 
         // Send the next item to execute
-        $result = $contractApiConsumer->sendMessage($message);
+        $messageSentResult = $contractApiConsumer->sendMessage($message);
 
         //Read success messages from the contract server and store them to the database
-        if ($result->httpcode === 200 &&
-            $dao->setMessageSent($message, $result->response))
+        if ($messageSentResult->httpcode === 200 &&
+            $dao->setMessageSent($message, $messageSentResult->response))
         {
             // 1. Communicate bi-directionally with the API server.
             // 7. Communicate changes in "State" on an item to the API server. 
             $response = $apiServerConsumer->sendSateChangeMessage($message);
 
-            //TODO validate
+            //TODO validate $response?
         }
     }
     else
     {
-        //empty queue, sleep for $config->workerDelay miliseconds
-        usleep($config->workerDelay * 1000);
+        //the queue is empty, sleep for $config->workerDelayInMilliseconds
+        //waiting for new messages
+        usleep($config->workerDelayInMilliseconds * 1000);
     }
 }
