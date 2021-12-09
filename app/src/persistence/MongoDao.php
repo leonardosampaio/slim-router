@@ -36,6 +36,13 @@ class MongoDao
         $this->messagesCollection = $config->db->messagesCollection;
     }
 
+    /**
+     * Save the message to $this->messagesCollection
+     * 
+     * @param array $messageArray message associtive array
+     * 
+     * @return int|bool in case of success, id of the inserted message
+     */
     public function saveMessage(&$messageArray)
     {
         try
@@ -47,7 +54,8 @@ class MongoDao
             $messageArray->updatedAt = new \MongoDB\BSON\UTCDateTime($time);
     
             $collection = $this->db->{$this->messagesCollection};
-            //5. Index the database to quickly query the earliest items that were added to the database based on the items "State" 
+            //5. Index the database to quickly query the earliest items that
+            // were added to the database based on the items "State" 
             $collection->createIndex(['State' => 1]);
             $collection->createIndex(['updatedAt' => 1]);
     
@@ -67,7 +75,15 @@ class MongoDao
         return false;
     }
 
-    public function setMessageSent($document, $contractApiResponse)
+    /**
+     * Updates the message State to $this->sentState
+     * 
+     * @param array $messageArray message associtive array
+     * @param string $contractApiResponse raw Contract API json response
+     * 
+     * @return bool true if message was updated and response inserted
+     */
+    public function setMessageSent($messageArray, $contractApiResponse)
     {
         $session = $this->connection->startSession();
         $session->startTransaction();
@@ -75,7 +91,7 @@ class MongoDao
 
             $updated = $this->db->{$this->messagesCollection}->updateOne(
                 ['_id' => new \MongoDB\BSON\ObjectID(
-                    json_decode($document)->mongoDbId->{'$oid'})],
+                    json_decode($messageArray)->mongoDbId->{'$oid'})],
                 ['$set' => ['State' => $this->sentState]]
             );
 
@@ -85,7 +101,8 @@ class MongoDao
 
             $session->commitTransaction();
 
-            return $updated->getModifiedCount() === 1 &&
+            return json_last_error() === JSON_ERROR_NONE &&
+                $updated->getModifiedCount() === 1 &&
                 $inserted->getInsertedCount() === 1;
 
         } catch(\Exception $e) {
