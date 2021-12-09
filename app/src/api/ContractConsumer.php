@@ -24,7 +24,7 @@ class ContractConsumer
      * 
      * @param string $message raw json to be sent
      * 
-     * @return array httpcode and raw json response from the Contract server
+     * @return object httpcode and raw json response from the Contract server
      */
     public function sendMessage($message)
     {

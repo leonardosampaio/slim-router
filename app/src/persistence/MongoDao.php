@@ -3,6 +3,8 @@
 namespace persistence;
 
 use \MongoDB\Client;
+use \MongoDB\BSON\UTCDateTime;
+use \MongoDB\BSON\ObjectID;
 class MongoDao
 {
     private $connection;
@@ -39,7 +41,7 @@ class MongoDao
     /**
      * Save the message to $this->messagesCollection
      * 
-     * @param array $messageArray message associtive array
+     * @param object $messageArray message object
      * 
      * @return int|bool in case of success, id of the inserted message
      */
@@ -51,7 +53,7 @@ class MongoDao
     
             // 3. Store each item with an integer field "State" 
             $messageArray->State = $this->unsentState;
-            $messageArray->updatedAt = new \MongoDB\BSON\UTCDateTime($time);
+            $messageArray->updatedAt = new UTCDateTime($time);
     
             $collection = $this->db->{$this->messagesCollection};
             //5. Index the database to quickly query the earliest items that
@@ -78,20 +80,20 @@ class MongoDao
     /**
      * Updates the message State to $this->sentState
      * 
-     * @param array $messageArray message associtive array
+     * @param string $messageJsonStr raw message json
      * @param string $contractApiResponse raw Contract API json response
      * 
      * @return bool true if message was updated and response inserted
      */
-    public function setMessageSent($messageArray, $contractApiResponse)
+    public function setMessageSent($messageJsonStr, $contractApiResponse)
     {
         $session = $this->connection->startSession();
         $session->startTransaction();
         try {
 
             $updated = $this->db->{$this->messagesCollection}->updateOne(
-                ['_id' => new \MongoDB\BSON\ObjectID(
-                    json_decode($messageArray)->mongoDbId->{'$oid'})],
+                ['_id' => new ObjectID(
+                    json_decode($messageJsonStr)->mongoDbId->{'$oid'})],
                 ['$set' => ['State' => $this->sentState]]
             );
 

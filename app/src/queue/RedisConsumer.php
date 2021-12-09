@@ -21,6 +21,7 @@ class RedisConsumer {
         ]);
         $this->client->connect();
 
+        //queue ids
         $this->messagesKey = $config->redis->messagesKey;
         $this->countKey = $config->redis->countKey;
 
@@ -31,19 +32,29 @@ class RedisConsumer {
         $this->timeLimitInSeconds = $config->timeLimitInSeconds;
     }
 
+    /**
+     * For testing purposes
+     */
     public function deleteAll()
     {
         return $this->client->flushAll();
     }
 
-    public function saveMessage(&$document)
+    /**
+     * Save a new message to $this->messagesKey queue
+     * 
+     * @param object $message message to save
+     * 
+     * @return int|bool in case of success, the number of the message in the queue
+     */
+    public function saveMessage(&$message)
     {
         try {
-            $result = $this->client->rpush($this->messagesKey, json_encode($document));
-    
+            $result = $this->client->rpush($this->messagesKey, json_encode($message));
+
             if (is_int($result) && $result > 0)
             {
-                $document->redisQueuePosition = $result;
+                $message->redisQueuePosition = $result;
                 return $result;
             }
 
@@ -54,13 +65,20 @@ class RedisConsumer {
         }
     }
 
+    /**
+     * Get the next avaliable message from the queue, if not rate limited
+     * 
+     * @return string in case of success, the message
+     */
     public function getNextMessage()
     {
+        //quota queue is empty, initialize it
         if (!$this->client->exists($this->countKey))
         {
             $message = $this->client->lpop($this->messagesKey);
 
             $this->client->set($this->countKey, !empty($message) ? 1 : 0);
+            //restart quota in $this->timeLimitInSeconds
             $this->client->expire($this->countKey, $this->timeLimitInSeconds);
 
             return $message;
@@ -71,6 +89,7 @@ class RedisConsumer {
         if ($quotaConsumed <= $this->messageLimit &&
             !empty($message = $this->client->lpop($this->messagesKey)))
         {
+            //valid quota, increment quota consumed number
             $this->client->incr($this->countKey);
             return $message;
         }
