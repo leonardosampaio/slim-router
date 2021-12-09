@@ -1,61 +1,58 @@
 <?php
 
-namespace redis;
+namespace queue;
+
+use Predis\Client;
 
 class RedisConsumer {
 
     private $client;
     private $messageLimit;
     private $timeLimit;
+    private $countKey;
+    private $messagesKey;
 
     public function __construct($config)
     {
-        $this->client = new \Predis\Client([
+        $this->client = new Client([
             'scheme' => $config->redis->scheme,
             'host'   => $config->redis->host,
             'port'   => $config->redis->port
         ]);
+        $this->messagesKey = $config->redis->messagesKey;
+        $this->countKey = $config->redis->countKey;
+
+        // 6. Set communication thresholds -- send the next item to the contract
+        // server immediately unless more than X transactions were sent in the last Y seconds.
+        // (these variables should be able to change) 
         $this->messageLimit = $config->messageLimit;
         $this->timeLimit = $config->timeLimit;
     }
 
-    public function saveMessage($dbInsertResult)
+    public function saveMessage($document)
     {
-        //fila 1, mensagens a processar
-
-        $id = $dbInsertResult->document->getInsertedId();
-        $date = $dbInsertResult->updatedAt;
-        $document = $dbInsertResult->document;
-
-        //fila 2, timestamp de processamento com expiração
-
+        return $this->client->rpush($this->messagesKey, json_encode($document));
     }
 
     public function getNextMessage()
     {
-        // if $this->messageLimit >
-        // qtd de itens da fila 2 com item.time > (now - $this->timeLimit);
-        //retorna uma 
-        //se nao null
-    }
-
-    public function test()
-    {
-        $cachedData = $this->client->get($this->cacheEntryIdentifier);
-        var_dump($cachedData);
-        
-        // if ($cachedData != null) {
+        if (!$this->client->exists($this->countKey))
+        {
+            $this->client->set($this->countKey, 1);
+            $this->client->expire($this->countKey, $this->timeLimit);
             
-        // }
+            return $this->client->lpop($this->messagesKey);
+        }
 
-        // $this->client->set($this->cacheEntryIdentifier, base64_encode($json));
-        // $this->client->expire($this->cacheEntryIdentifier, 10);
+        $total = $this->client->get($this->countKey);
+
+        if ($total <= $this->messageLimit)
+        {
+            $this->client->incr($this->countKey);
+            
+            return $this->client->lpop($this->messagesKey);
+        }
+
+        return null;
     }
-
-    // public function canSendMessage()
-    // {
-    //     return $this->messageLimit > $this->db->messages->count(
-    //         ['State' => $this->sentState,
-    //         'updatedAt' => ['$gte' => new \MongoDB\BSON\UTCDateTime(time() - $this->timeLimit)]]);
-    // }
 }
