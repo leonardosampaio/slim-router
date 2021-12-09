@@ -1,9 +1,9 @@
-# Message router
+# PHP message router
 
-This application has two main parts:
+This application has two main parts, which run asynchonously:
 
-1. Web, that will will receive POST requests with JSON messages, store (MongoDB/Redis) and process them
-2. CLI, with a worker that will consume a Redis queue to send the received messages (from the API server) to a second server (Contract server), updating the state of the sent messages on the MongoDB database
+1. Web server `app/index.php`, that receives POST requests with JSON messages, process and stores (MongoDB/Redis) them;
+2. CLI script `app/worker.php`, that consumes a Redis queue to send the received messages (from the API server) to a second server (Contract server), updating the state of the sent messages on the MongoDB database.
 
 ## Instalation
 
@@ -36,5 +36,6 @@ This application has two main parts:
     | contractServer url | Contract server URL that should be called to send the next item to execute |
 
 2. Run `docker compose up` on root folder
-3. Configure API server to make POST calls to `http://localhost:81/receive`
-4. Run the worker CLI script with `docker exec -it app /usr/local/bin/php /var/www/html/worker.php`
+3. Optionally, run `docker exec -it app composer update` to update the dependencies
+4. Configure API server to make POST calls to `http://localhost:81/receive`
+5. Run the worker CLI script with `docker exec -it app /usr/local/bin/php /var/www/html/worker.php`

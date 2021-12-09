@@ -27,19 +27,54 @@ $app->post('/receive', function($request, $response) use ($config)
 {
     $rawPayload = file_get_contents('php://input');
 
-    if (empty($rawPayload) || empty($payloadJsonArray = json_decode($rawPayload)))
+    if (empty($rawPayload) ||
+        empty($payloadJsonArray = json_decode($rawPayload)) ||
+        json_last_error() !== JSON_ERROR_NONE ||
+        !in_array($payloadJsonArray->operation,
+            ['create_wallet', 'create_nft_series', 'transfer_nft'])) 
     {
         return $response->withJson(['error'=>'Invalid payload'])->withStatus(400);
     }
 
-    // 2. Format and store every message received from the API server to the database 
+    // 2. Format and store every message received from the API server to the database
+
     $insertedId = (new MongoDao($config))->saveMessage($payloadJsonArray);
 
     if ($insertedId)
     {
         if ((new RedisConsumer($config))->saveMessage($payloadJsonArray))
         {
-            return $response->withJson(['messageSaved' => $payloadJsonArray], 200);
+            $responseArray = [
+                'success' => true
+            ];
+        
+            switch ($payloadJsonArray->operation)
+            {
+                case 'create_wallet': 
+                {
+                    $responseArray['operation'] = 'create_wallet_out';
+                    $responseArray['args'] = $payloadJsonArray->args;
+                    break;
+                }
+                case 'create_nft_series':
+                {
+                    $responseArray['operation'] = 'create_nft_series_out';
+                    $responseArray['args'] = [
+                        'token_id' => $payloadJsonArray->args->token_id
+                    ];
+                    break;
+                }
+                case 'transfer_nft':
+                {
+                    $responseArray['operation'] = 'transfer_nft_out';
+                }
+                default:
+                {
+                    break;
+                }
+            }
+
+            return $response->withJson($responseArray, 200);
         }
         
         return $response->withJson(['error' => 'Error saving message to queue'], 400);
