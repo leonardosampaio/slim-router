@@ -7,14 +7,23 @@ use util\CurlWrapper;
 class ContractConsumer
 {
     private $url;
+    private $port;
+    private $timeoutInSeconds;
 
     public function __construct($config)
     {
         $this->url = $config->contractServer->url;
+        $this->port = isset($config->contractServer->port) ?
+            $config->contractServer->port : 443;
+        $this->timeoutInSeconds = isset($config->contractServer->timeoutInSeconds) ?
+            $config->contractServer->timeoutInSeconds : 10;
     }
 
     public function sendMessage($message)
     {
-        return (new CurlWrapper())->post($this->url, $message);
+        return (new CurlWrapper())->post($this->url,
+        $message,
+        $this->timeoutInSeconds,
+        $this->port);
     }
 }

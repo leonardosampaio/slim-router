@@ -4,7 +4,7 @@ namespace util;
 
 class CurlWrapper {
 
-    public function post($url, $message, $port = 443)
+    public function post($url, $message, $timeoutInSeconds = 10, $port = 443)
     {
         $curlSession = curl_init();
 
@@ -17,6 +17,9 @@ class CurlWrapper {
         curl_setopt($curlSession, CURLOPT_POST, 1); 
         curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curlSession, CURLOPT_SSL_VERIFYPEER, 1);
+
+        curl_setopt($curlSession, CURLOPT_CONNECTTIMEOUT, $timeoutInSeconds);
+        curl_setopt($curlSession, CURLOPT_TIMEOUT, $timeoutInSeconds); 
 
         $response = curl_exec($curlSession);
         $httpcode = curl_getinfo($curlSession, CURLINFO_HTTP_CODE);

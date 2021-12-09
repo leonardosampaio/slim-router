@@ -23,19 +23,19 @@ while (true)
 {
     if (!empty($message = $redisConsumer->getNextMessage()))
     {
-        echo 'msg: ' . $message . PHP_EOL;
-
         // 4. Communicate bi-directionally with the contract server. 
         // Send the next item to execute
-        $response = $contractApiConsumer->sendMessage($message);
+        $result = $contractApiConsumer->sendMessage($message);
 
         //Read success messages from the contract server and store them to the database
         if ($result->httpcode === 200 &&
-            $dao->setMessageSent($message, $response))
+            $dao->setMessageSent($message, $result->response))
         {
             // 1. Communicate bi-directionally with the API server.
             // 7. Communicate changes in "State" on an item to the API server. 
-            $apiServerConsumer->sendSateChangeMessage($message);
+            $response = $apiServerConsumer->sendSateChangeMessage($message);
+
+            //TODO validate
         }
     }
     else
