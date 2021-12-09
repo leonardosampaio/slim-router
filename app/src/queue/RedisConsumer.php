@@ -14,6 +14,9 @@ class RedisConsumer {
 
     public function __construct($config)
     {
+        /**
+         * Using Predis pure PHP implementation
+         */
         $this->client = new Client([
             'scheme' => $config->redis->scheme,
             'host'   => $config->redis->host,

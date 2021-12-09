@@ -39,6 +39,40 @@ class MongoDao
     }
 
     /**
+     * List of the last $limit messages
+     * 
+     * @param int $state sent/unset state
+     * @param int $limit number of messages to return
+     * 
+     * @return array of messages
+     */
+    public function latestMessages($state, $limit = 10)
+    {
+        $start = round(microtime(true) * 1000);
+        $cursor = $this->db->{$this->messagesCollection}->find(
+            [
+                'State' => $state
+            ],
+            [
+                'sort' => [
+                    'updatedAt' => 1
+                ],
+                'limit' => $limit
+            ]
+        );
+
+        $messages = [];
+        foreach ($cursor as $message) {
+            $messages[] = $message;
+        }
+
+        return [
+            "Total time (ms)"=>(round(microtime(true) * 1000) - $start),
+            "Last $limit messages" => $messages
+        ];
+    }
+
+    /**
      * Save the message to $this->messagesCollection
      * 
      * @param object $messageArray message object

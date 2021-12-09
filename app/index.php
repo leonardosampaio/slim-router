@@ -11,6 +11,9 @@ $app = AppFactory::create();
 //show errors
 $app->addErrorMiddleware(true, true, true);
 
+$config =
+        json_decode(file_get_contents(__DIR__ . '/configuration.json'));
+
 /**
  * Main entrypoint, will receive POST requests from the API server.
  * 
@@ -20,7 +23,7 @@ $app->addErrorMiddleware(true, true, true);
  * 
  * "1. Communicate bi-directionally with the API server."
  */
-$app->post('/receive', function($request, $response)
+$app->post('/receive', function($request, $response) use ($config)
 {
     $rawPayload = file_get_contents('php://input');
 
@@ -28,9 +31,6 @@ $app->post('/receive', function($request, $response)
     {
         return $response->withJson(['error'=>'Invalid payload'])->withStatus(400);
     }
-
-    $config =
-        json_decode(file_get_contents(__DIR__ . '/configuration.json'));
 
     // 2. Format and store every message received from the API server to the database 
     $insertedId = (new MongoDao($config))->saveMessage($payloadJsonArray);
@@ -49,9 +49,15 @@ $app->post('/receive', function($request, $response)
     return $response->withJson(['error' => 'Error saving message to database'], 400);
 });
 
-$app->get('/', function($request, $response)
+/**
+ * Example of how to retrive messages
+ */
+$app->get('/', function($request, $response) use ($config)
 {
-    return $response->withJson(['error'=>'Invalid method'])->withStatus(400);
+    $number = 50;
+    $dao = new MongoDao($config);
+    $messages = $dao->latestMessages($config->sentState, $number);
+    return $response->withJson($messages)->withStatus(200);
 });
 
 $app->run();
