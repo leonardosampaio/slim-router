@@ -9,7 +9,9 @@
     "autoload": {
         "psr-0": {
             "queue": "src/",
-            "persistence": "src/"
+            "persistence": "src/",
+            "api": "src/",
+            "util": "src/"
         }
       }
 }

@@ -58,19 +58,21 @@ class RedisConsumer {
     {
         if (!$this->client->exists($this->countKey))
         {
-            $this->client->set($this->countKey, 1);
+            $message = $this->client->lpop($this->messagesKey);
+
+            $this->client->set($this->countKey, !empty($message) ? 1 : 0);
             $this->client->expire($this->countKey, $this->timeLimitInSeconds);
-            
-            return $this->client->lpop($this->messagesKey);
+
+            return $message;
         }
 
-        $total = $this->client->get($this->countKey);
+        $quotaConsumed = $this->client->get($this->countKey);
 
-        if ($total <= $this->messageLimit)
+        if ($quotaConsumed <= $this->messageLimit &&
+            !empty($message = $this->client->lpop($this->messagesKey)))
         {
             $this->client->incr($this->countKey);
-            
-            return $this->client->lpop($this->messagesKey);
+            return $message;
         }
 
         return null;

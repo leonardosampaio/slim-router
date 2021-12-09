@@ -1,10 +1,5 @@
 <?php
 
-if( defined('STDIN') && (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && count($_SERVER['argv']) > 0))
-{
-    die("mongodb extension not avaliable in CLI");
-}
-
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $client = new \MongoDB\Client('mongodb://user:password@db:27017');

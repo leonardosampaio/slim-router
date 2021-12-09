@@ -12,7 +12,7 @@ if( !defined('STDIN') || !(empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HT
     die("This should run in CLI");
 }
 
-$config = json_decode(file_get_contents(__DIR__ . '/../configuration.json'));
+$config = json_decode(file_get_contents(__DIR__ . '/configuration.json'));
 
 $redisConsumer = new RedisConsumer($config);
 $contractApiConsumer = new ContractConsumer($config);
@@ -21,8 +21,10 @@ $dao = new MongoDao($config);
 
 while (true)
 {
-    if ($message = $redisConsumer->getNextMessage() !== null)
+    if (!empty($message = $redisConsumer->getNextMessage()))
     {
+        echo 'msg: ' . $message . PHP_EOL;
+
         // 4. Communicate bi-directionally with the contract server. 
         // Send the next item to execute
         $response = $contractApiConsumer->sendMessage($message);
