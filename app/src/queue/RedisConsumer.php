@@ -8,7 +8,7 @@ class RedisConsumer {
 
     private $client;
     private $messageLimit;
-    private $timeLimit;
+    private $timeLimitInSeconds;
     private $countKey;
     private $messagesKey;
 
@@ -19,6 +19,8 @@ class RedisConsumer {
             'host'   => $config->redis->host,
             'port'   => $config->redis->port
         ]);
+        $this->client->connect();
+
         $this->messagesKey = $config->redis->messagesKey;
         $this->countKey = $config->redis->countKey;
 
@@ -26,7 +28,12 @@ class RedisConsumer {
         // server immediately unless more than X transactions were sent in the last Y seconds.
         // (these variables should be able to change) 
         $this->messageLimit = $config->messageLimit;
-        $this->timeLimit = $config->timeLimit;
+        $this->timeLimitInSeconds = $config->timeLimitInSeconds;
+    }
+
+    public function deleteAll()
+    {
+        return $this->client->flushAll();
     }
 
     public function saveMessage($document)
@@ -39,7 +46,7 @@ class RedisConsumer {
         if (!$this->client->exists($this->countKey))
         {
             $this->client->set($this->countKey, 1);
-            $this->client->expire($this->countKey, $this->timeLimit);
+            $this->client->expire($this->countKey, $this->timeLimitInSeconds);
             
             return $this->client->lpop($this->messagesKey);
         }

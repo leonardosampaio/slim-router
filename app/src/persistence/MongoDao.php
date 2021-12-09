@@ -2,6 +2,7 @@
 
 namespace persistence;
 
+use \MongoDB\Client;
 class MongoDao
 {
     private $connection;
@@ -11,7 +12,7 @@ class MongoDao
 
     public function __construct($config)
     {
-        $this->connection = new \MongoDB\Client(
+        $this->connection = new Client(
             "mongodb://$config->db->user:$config->db->password@$config->db->host:$config->db->port");
         $this->db = $this->connection->{$config->database};
 
