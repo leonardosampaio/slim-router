@@ -9,6 +9,7 @@ class ApiServerConsumer
     private $stateChangeUrl;
     private $port;
     private $timeoutInSeconds;
+    private $apiKey;
 
     public function __construct($config)
     {
@@ -18,6 +19,8 @@ class ApiServerConsumer
         $this->timeoutInSeconds =
             isset($config->apiServer->timeoutInSeconds) ?
                 $config->apiServer->timeoutInSeconds : 10;
+        $this->apiKey = isset($config->apiServer->apiKey) ?
+            $config->apiServer->apiKey : '';
     }
 
     /**
@@ -32,6 +35,7 @@ class ApiServerConsumer
         return (new CurlWrapper())->post(
             $this->stateChangeUrl,
             $message,
+            ['apiKey'=>$this->apiKey],
             $this->timeoutInSeconds,
             $this->port);
     }

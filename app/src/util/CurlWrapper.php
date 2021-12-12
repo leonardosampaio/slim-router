@@ -14,9 +14,14 @@ class CurlWrapper {
      * 
      * @return array httpcode and raw json response from server
      */
-    public function post($url, $message, $timeoutInSeconds = 10, $port = 443)
+    public function post($url, $message, $headers = [], $timeoutInSeconds = 10, $port = 443)
     {
         $curlSession = curl_init();
+
+        if (!empty($headers))
+        {
+            curl_setopt($curlSession, CURLOPT_HTTPHEADER, $headers);
+        }
 
         curl_setopt($curlSession, CURLOPT_POSTFIELDS, $message);
 

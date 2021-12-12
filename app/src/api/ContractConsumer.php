@@ -30,6 +30,7 @@ class ContractConsumer
     {
         return (new CurlWrapper())->post($this->url,
         $message,
+        [],
         $this->timeoutInSeconds,
         $this->port);
     }

@@ -36,9 +36,43 @@ while (true)
         if ($messageSentResult->httpcode === 200 &&
             $dao->setMessageSent($message, $messageSentResult->response))
         {
+
+            $messageObj = json_decode($message);
+
+            $responseArray = [
+                'success' => true,
+                "request_id" => $messageObj->request_id
+            ];
+        
+            switch ($messageObj->operation)
+            {
+                case 'create_wallet': 
+                {
+                    $responseArray['operation'] = 'create_wallet_out';
+                    $responseArray['args'] = $messageObj->args;
+                    break;
+                }
+                case 'create_nft_series':
+                {
+                    $responseArray['operation'] = 'create_nft_series_out';
+                    $responseArray['args'] = [
+                        'token_id' => $messageObj->args->token_id
+                    ];
+                    break;
+                }
+                case 'transfer_nft':
+                {
+                    $responseArray['operation'] = 'transfer_nft_out';
+                }
+                default:
+                {
+                    break;
+                }
+            }
+
             // 1. Communicate bi-directionally with the API server.
             // 7. Communicate changes in "State" on an item to the API server. 
-            $response = $apiServerConsumer->sendSateChangeMessage($message);
+            $response = $apiServerConsumer->sendSateChangeMessage(json_encode($responseArray));
 
             //TODO validate $response?
         }

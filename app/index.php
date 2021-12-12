@@ -44,37 +44,7 @@ $app->post('/receive', function($request, $response) use ($config)
     {
         if ((new RedisConsumer($config))->saveMessage($payloadJsonArray))
         {
-            $responseArray = [
-                'success' => true
-            ];
-        
-            switch ($payloadJsonArray->operation)
-            {
-                case 'create_wallet': 
-                {
-                    $responseArray['operation'] = 'create_wallet_out';
-                    $responseArray['args'] = $payloadJsonArray->args;
-                    break;
-                }
-                case 'create_nft_series':
-                {
-                    $responseArray['operation'] = 'create_nft_series_out';
-                    $responseArray['args'] = [
-                        'token_id' => $payloadJsonArray->args->token_id
-                    ];
-                    break;
-                }
-                case 'transfer_nft':
-                {
-                    $responseArray['operation'] = 'transfer_nft_out';
-                }
-                default:
-                {
-                    break;
-                }
-            }
-
-            return $response->withJson($responseArray, 200);
+            return $response->withJson('Ok', 200);
         }
         
         return $response->withJson(['error' => 'Error saving message to queue'], 400);

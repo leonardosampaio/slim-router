@@ -31,6 +31,7 @@ This application has two main parts, which run asynchonously:
     | apiServer port | API server port (by default, HTTPS 443) |
     | apiServer timeoutInSeconds | API server connection and response timeout in seconds |
     | apiServer stateChangeUrl | API server URL that should be called on every message state change event |
+    | apiServer apiKey | API key |
     | contractServer port | API server port (by default, HTTPS 443) |
     | contractServer timeoutInSeconds | Contract server connection and response timeout in seconds |
     | contractServer url | Contract server URL that should be called to send the next item to execute |
@@ -38,4 +39,4 @@ This application has two main parts, which run asynchonously:
 2. Run `docker compose up` on root folder
 3. Optionally, run `docker exec -it app composer update` to update the dependencies
 4. Configure API server to make POST calls to `http://localhost:81/receive`
-5. Run the worker CLI script with `docker exec -it app /usr/local/bin/php /var/www/html/worker.php`
+5. Run the worker CLI script with `docker exec -it -d app /usr/local/bin/php /var/www/html/worker.php`
